@@ -130,7 +130,7 @@
     <input type="text" id="searchBar" placeholder="Enter movie name" />
     <button id="button" onclick="getMovieId()">Search</button>
     <div id="video">
-      <iframe src="" type="" id="movieEmbed" allowfullscreen></iframe>
+    
     </div>
     <div id="details"></div>
   </div>
@@ -148,6 +148,15 @@
 
         console.log(`The ID of the first search result is: ${movieId}`);
 
+        // Construct the iframe URL
+        const iframeUrl = `https://vidsrc.to/movie/embed/${movieId}`;
+
+        // Display the iframe
+        document.getElementById("video").innerHTML = `
+          <iframe src="${iframeUrl}" id="movieEmbed" allowfullscreen></iframe>
+        `;
+
+        // Fetch and display movie details
         const detailsUrl = `https://api.tmdb.org/3/movie/${movieId}?api_key=${apiKey}`;
         const detailsResponse = await fetch(detailsUrl);
         const detailsData = await detailsResponse.json();
@@ -163,10 +172,7 @@
         const cast = castData.cast.slice(0, 5).map(actor => actor.name).join(", ");
         const ratings = detailsData.vote_average;
 
-        // Display details
-        document.getElementById("video").innerHTML = `
-          <iframe src="https://vidsrc.to/embed/movie/${movieId}" id="movieEmbed" allowfullscreen></iframe>
-        `;
+        // Display additional details
         document.getElementById("details").innerHTML = `
           <h1>${title}</h1>
           <img src="https://image.tmdb.org/t/p/w300/${posterPath}" alt="${title} Poster">
