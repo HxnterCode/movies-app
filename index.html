@@ -34,6 +34,7 @@
     h1 {
       font-size: 2rem;
       margin-bottom: 20px;
+      color: #287c2b;
     }
 
     #searchBar {
@@ -62,6 +63,8 @@
       padding-bottom: 56.25%;
       height: 0;
       margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
     }
 
     #video iframe {
@@ -73,6 +76,46 @@
       border: none;
       border-radius: 8px;
     }
+
+    #details {
+      margin-top: 20px;
+    }
+
+    #details img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    #details p {
+      margin-bottom: 10px;
+    }
+
+    #details strong {
+      color: #287c2b;
+    }
+
+    #details .ratings {
+      display: flex;
+      align-items: center;
+    }
+
+    #details .star {
+      color: #ffac33;
+      margin-right: 5px;
+    }
+
+    #details button {
+      width: 100%;
+      padding: 10px;
+      background-color: #287c2b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
@@ -80,29 +123,55 @@
   <header>
     <h1>Movie Player</h1>
   </header>
-  <div class="container">
+  <div class="container" id="container">
     <input type="text" id="searchBar" placeholder="Enter movie name" />
     <button id="button" onclick="getMovieId()">Search</button>
     <div id="video">
       <iframe src="" type="" id="movieEmbed" allowfullscreen></iframe>
     </div>
+    <div id="details"></div>
   </div>
 
   <script>
     async function getMovieId() {
       const query = document.getElementById("searchBar").value;
       const apiKey = "72af0d7a1271d59db62a3d2fe9c4be77";
-      const url = `https://api.tmdb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`;
+      const searchUrl = `https://api.tmdb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`;
 
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const id = data.results[0].id;
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+        const movieId = searchData.results[0].id;
 
-        console.log(`The ID of the first search result is: ${id}`);
+        console.log(`The ID of the first search result is: ${movieId}`);
 
-        const iframeElement = document.getElementById("movieEmbed");
-        iframeElement.src = `https://vidsrc.to/embed/movie/${id}`;
+        const detailsUrl = `https://api.tmdb.org/3/movie/${movieId}?api_key=${apiKey}`;
+        const detailsResponse = await fetch(detailsUrl);
+        const detailsData = await detailsResponse.json();
+
+        // Extract details
+        const title = detailsData.title;
+        const posterPath = detailsData.poster_path;
+        const detailsText = detailsData.overview;
+        const genres = detailsData.genres.map(genre => genre.name).join(", ");
+        const castUrl = `https://api.tmdb.org/3/movie/${movieId}/credits?api_key=${apiKey}`;
+        const castResponse = await fetch(castUrl);
+        const castData = await castResponse.json();
+        const cast = castData.cast.slice(0, 5).map(actor => actor.name).join(", ");
+        const ratings = detailsData.vote_average;
+
+        // Display details
+        document.getElementById("video").innerHTML = `
+          <iframe src="https://vidsrc.to/embed/movie/${movieId}" type="" id="movieEmbed" allowfullscreen></iframe>
+        `;
+        document.getElementById("details").innerHTML = `
+          <h1>${title}</h1>
+          <img src="https://image.tmdb.org/t/p/w300/${posterPath}" alt="${title} Poster">
+          <p><strong>Details:</strong> ${detailsText}</p>
+          <p><strong>Genres:</strong> ${genres}</p>
+          <p><strong>Cast:</strong> ${cast}</p>
+          <p class="ratings"><strong>Ratings:</strong> <span class="star"> &#9733;</span>${ratings}/10</p>
+        `;
       } catch (error) {
         console.error("An error occurred:", error);
       }
